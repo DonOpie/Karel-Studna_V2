@@ -152,8 +152,7 @@ def spustit():
         vysledek = main()
         return f"✅ Spuštěno: {vysledek}"
     except Exception as e:
-        return f"❌ Chyba: {e}
-"
+        return f"❌ Chyba: {e}"
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=81)
