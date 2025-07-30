@@ -1,38 +1,29 @@
+from flask import Flask
 import requests
 import json
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 import os
-from flask import Flask
 
 EMAIL = "malykarel74@gmail.com"
 PASSWORD = "Poklop74"
 SN = "SB825040"
 
-HIGH_LEVEL = 180  # cm
-
+HIGH_LEVEL = 180
 ON_DURATION = timedelta(minutes=3)
 OFF_DURATION = timedelta(minutes=25)
-
 STATE_FILE = "stav.json"
 
 def httpPost(url, header={}, params={}, data={}):
-    headers = {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        **header
-    }
+    headers = {"Content-Type": "application/json", "Accept": "application/json", **header}
     data = json.dumps(data)
-    r = requests.post(url=url, data=data, headers=headers, params=params)
+    r = requests.post(url, data=data, headers=headers, params=params)
     r.raise_for_status()
     return r.json()
 
 def httpGet(url, header={}, params={}):
-    headers = {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        **header
-    }
-    r = requests.get(url=url, headers=headers, params=params)
+    headers = {"Content-Type": "application/json", "Accept": "application/json", **header}
+    r = requests.get(url, headers=headers, params=params)
     r.raise_for_status()
     return r.json()
 
@@ -42,7 +33,7 @@ class ThingsBoard:
         self.userToken = None
         self.customerId = None
 
-    def login(self, username: str, password: str):
+    def login(self, username, password):
         url = f'{self.server}/api/auth/login'
         response = httpPost(url, {}, data={'username': username, 'password': password})
         self.userToken = response["token"]
@@ -50,36 +41,33 @@ class ThingsBoard:
         response = httpGet(url, {'X-Authorization': f"Bearer {self.userToken}"})
         self.customerId = response["customerId"]["id"]
 
-    def getDevicesByName(self, name: str):
+    def getDevicesByName(self, name):
         url = f'{self.server}/api/customer/{self.customerId}/devices'
         params = {'pageSize': 100, 'page': 0, "textSearch": name}
         response = httpGet(url, {'X-Authorization': f"Bearer {self.userToken}"}, params=params)
         if response["totalElements"] < 1:
-            raise Exception(f"Device SN {name} has not been found!")
+            raise Exception(f"Device SN {name} not found!")
         return response["data"]
 
     def getDeviceValues(self, deviceId, keys):
         url = f'{self.server}/api/plugins/telemetry/DEVICE/{deviceId}/values/timeseries'
         params = {'keys': keys}
-        response = httpGet(url, {'X-Authorization': f"Bearer {self.userToken}"}, params=params)
-        return response
+        return httpGet(url, {'X-Authorization': f"Bearer {self.userToken}"}, params=params)
 
-    def setDeviceOutput(self, deviceId, output: str, value: bool):
+    def setDeviceOutput(self, deviceId, output, value):
         method = "setDout1" if output == "OUT1" else "setDout2"
         data = {"method": method, "params": value}
         url = f'{self.server}/api/rpc/twoway/{deviceId}'
-        response = httpPost(url, {'X-Authorization': f"Bearer {self.userToken}"}, params={}, data=data)
-        return response
+        return httpPost(url, {'X-Authorization': f"Bearer {self.userToken}"}, {}, data)
 
-def eStudna_GetWaterLevel(username: str, password: str, serialNumber: str) -> float:
+def eStudna_GetWaterLevel(username, password, serialNumber):
     tb = ThingsBoard()
     tb.login(username, password)
     devices = tb.getDevicesByName(f"%{serialNumber}")
     values = tb.getDeviceValues(devices[0]["id"]["id"], "ain1")
-    level_m = float(values["ain1"][0]["value"])
-    return level_m * 100
+    return float(values["ain1"][0]["value"]) * 100
 
-def eStudna_SetOutput(username: str, password: str, serialNumber: str, state: bool):
+def eStudna_SetOutput(username, password, serialNumber, state):
     tb = ThingsBoard()
     tb.login(username, password)
     devices = tb.getDevicesByName(f"%{serialNumber}")
@@ -97,14 +85,14 @@ def load_state():
     with open(STATE_FILE, "r") as f:
         return json.load(f)
 
-def is_allowed_time(now: datetime) -> bool:
+def is_allowed_time(now):
     hour = now.hour
     minute = now.minute
     time = hour * 60 + minute
-    return 0 <= time < 170 or 1380 <= time <= 1439  # 00:00–2:50 a 23:00–23:59
+    return 0 <= time < 170 or 1380 <= time <= 1439
 
 def main():
-    now = datetime.now()
+    now = datetime.now(ZoneInfo("Europe/Prague"))
     print(f"Aktuální čas na serveru: {now.strftime('%Y-%m-%d %H:%M:%S')}")
 
     if not is_allowed_time(now):
@@ -143,7 +131,6 @@ def main():
     save_state({"phase": "on", "until": next_until.isoformat()})
     return "Hladina nízká – čerpadlo zapnuto na 3 minuty."
 
-from flask import Flask
 app = Flask(__name__)
 
 @app.route("/")
