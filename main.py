@@ -85,11 +85,18 @@ def load_state():
     with open(STATE_FILE, "r") as f:
         return json.load(f)
 
-def is_allowed_time(now):
+def is_allowed_time(now: datetime) -> bool:
+    weekday = now.weekday()  # 0 = pondělí, 6 = neděle
     hour = now.hour
     minute = now.minute
-    time = hour * 60 + minute
-    return 0 <= time < 170 or 1380 <= time <= 1439
+    time = hour * 60 + minute  # čas v minutách
+
+    if weekday >= 5:
+        # víkend (sobota = 5, neděle = 6): jen 23:00–23:59 a 00:00–2:50
+        return (1380 <= time <= 1439) or (0 <= time < 170)
+
+    # pracovní dny: 11:00–14:50 a 23:00–23:59 a 00:00–2:50
+    return (660 <= time <= 890) or (1380 <= time <= 1439) or (0 <= time < 170)
 
 def main():
     now = datetime.now(ZoneInfo("Europe/Prague"))
