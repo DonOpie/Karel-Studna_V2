@@ -150,8 +150,7 @@ app = Flask(__name__)
 def spustit():
     try:
         vysledek = main()
-        return f"✅ Spuštěno: {vysledek}
-"
+        return f"✅ Spuštěno: {vysledek}"
     except Exception as e:
         return f"❌ Chyba: {e}
 "
