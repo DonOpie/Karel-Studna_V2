@@ -91,12 +91,19 @@ def is_allowed_time(now: datetime) -> bool:
     minute = now.minute
     time = hour * 60 + minute  # čas v minutách
 
-    if weekday >= 5:
-        # víkend (sobota = 5, neděle = 6): jen 23:00–23:59 a 00:00–2:50
+    # Víkend (sobota, neděle): jen 23:00–2:50
+    if weekday == 5 or weekday == 6:
         return (1380 <= time <= 1439) or (0 <= time < 170)
 
-    # pracovní dny: 11:00–14:50 a 23:00–23:59 a 00:00–2:50
-    return (660 <= time <= 890) or (1380 <= time <= 1439) or (0 <= time < 170)
+    # Pondělí až pátek: 11:00–14:50 a 23:00–2:50
+    if (660 <= time <= 890):  # 11:00–14:50
+        return True
+    if (1380 <= time <= 1439):  # 23:00–23:59
+        return True
+    if (0 <= time < 170):  # 0:00–2:50 (následující den ráno)
+        return True
+
+    return False
 
 def main():
     now = datetime.now(ZoneInfo("Europe/Prague"))
