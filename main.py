@@ -9,7 +9,7 @@ EMAIL = "malykarel74@gmail.com"
 PASSWORD = "Poklop74"
 SN = "SB825040"
 
-HIGH_LEVEL = 180
+HIGH_LEVEL = 160
 ON_DURATION = timedelta(minutes=3)
 OFF_DURATION = timedelta(minutes=25)
 STATE_FILE = "stav.json"
