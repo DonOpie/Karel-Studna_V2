@@ -156,4 +156,4 @@ def spustit():
         return f"❌ Chyba: {e}"
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)  # 👈 port přepsán na 5000
+    app.run(host="0.0.0.0", port=5001)  # 👈 port přepsán na 5001
