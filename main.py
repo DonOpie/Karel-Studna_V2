@@ -100,7 +100,7 @@ def is_allowed_time(now: datetime) -> bool:
         return True
     if (1380 <= time <= 1439):  # 23:00–23:59
         return True
-    if (0 <= time < 170):  # 0:00–2:50 (následující den ráno)
+    if (0 <= time < 170):  # 0:00–2:50
         return True
 
     return False
@@ -109,41 +109,38 @@ def main():
     now = datetime.now(ZoneInfo("Europe/Prague"))
     print(f"Aktuální čas na serveru: {now.strftime('%Y-%m-%d %H:%M:%S')}")
 
-    if not is_allowed_time(now):
-        print("Mimo povolené časy čerpání.")
-        return "Mimo povolené časy čerpání."
-
     level = eStudna_GetWaterLevel(EMAIL, PASSWORD, SN)
     print(f"Aktuální hladina: {level:.1f} cm")
+
+    if not is_allowed_time(now):
+        return f"Mimo povolené časy čerpání.\nAktuální hladina: {level:.1f} cm"
 
     if level >= HIGH_LEVEL:
         print("Hladina je dostatečná, vypínám čerpadlo.")
         eStudna_SetOutput(EMAIL, PASSWORD, SN, False)
         save_state({"phase": "off", "until": None})
-        return "Hladina dostatečná – čerpadlo vypnuto."
+        return f"Hladina dostatečná – čerpadlo vypnuto.\nAktuální hladina: {level:.1f} cm"
 
     state = load_state()
     until = datetime.fromisoformat(state["until"]) if state["until"] else None
 
     if state["phase"] == "on" and until and now < until:
-        print(f"Čerpadlo běží do {until}")
-        return f"Čerpadlo běží do {until}"
+        return f"Čerpadlo běží do {until}\nAktuální hladina: {level:.1f} cm"
     elif state["phase"] == "on":
         print("Fáze ON skončila, vypínám čerpadlo.")
         eStudna_SetOutput(EMAIL, PASSWORD, SN, False)
         next_until = now + OFF_DURATION
         save_state({"phase": "off", "until": next_until.isoformat()})
-        return "Fáze ON skončila – přecházím do OFF."
+        return f"Fáze ON skončila – přecházím do OFF.\nAktuální hladina: {level:.1f} cm"
 
     if state["phase"] == "off" and until and now < until:
-        print(f"Pauza – čekám do {until}")
-        return f"Pauza – čekám do {until}"
+        return f"Pauza – čekám do {until}\nAktuální hladina: {level:.1f} cm"
 
     print("Hladina nedostatečná, zapínám čerpadlo.")
     eStudna_SetOutput(EMAIL, PASSWORD, SN, True)
     next_until = now + ON_DURATION
     save_state({"phase": "on", "until": next_until.isoformat()})
-    return "Hladina nízká – čerpadlo zapnuto na 3 minuty."
+    return f"Hladina nízká – čerpadlo zapnuto na 3 minuty.\nAktuální hladina: {level:.1f} cm"
 
 app = Flask(__name__)
 
@@ -156,4 +153,4 @@ def spustit():
         return f"❌ Karel STUDNA – Chyba: {e}"
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5001)  # 👈 port přepsán na 5001
+    app.run(host="0.0.0.0", port=5001)
