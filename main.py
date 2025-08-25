@@ -131,7 +131,7 @@ def is_allowed_time(now: datetime) -> bool:
 def main():
     now = datetime.now(ZoneInfo("Europe/Prague"))
     hladina = eStudna_GetWaterLevel(EMAIL, PASSWORD, SN)
-    zprava = f"\n📛 **Karel STUDNA**\nAktuální čas: {now.strftime('%Y-%m-%d %H:%M:%S')}\nHladina: {hladina:.1f} cm\n"
+    zprava = f"\n✅ **Karel STUDNA**\nAktuální čas: {now.strftime('%Y-%m-%d %H:%M:%S')}\nHladina: {hladina:.1f} cm\n"
 
     if not is_allowed_time(now):
         return zprava + "⛔ Mimo povolené časy čerpání."
