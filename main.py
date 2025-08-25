@@ -151,9 +151,9 @@ app = Flask(__name__)
 def spustit():
     try:
         vysledek = main()
-        return f"✅ Spuštěno: {vysledek}"
+        return f"✅ Karel STUDNA\n{vysledek}"
     except Exception as e:
-        return f"❌ Chyba: {e}"
+        return f"❌ Karel STUDNA – Chyba: {e}"
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5001)  # 👈 port přepsán na 5001
